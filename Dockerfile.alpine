@@ -24,6 +24,7 @@ RUN apk add -U build-base ncurses-dev openssl-dev readline-dev zip zlib-dev \
     && make \
     && make install \
     && touch /usr/vpnserver/vpn_server.config \
+    && touch /usr/vpnbridge/vpn_bridge.config \
     && zip -r9 /artifacts.zip /usr/vpn* /usr/bin/vpn*
 
 FROM alpine:3.14
@@ -39,16 +40,16 @@ RUN apk add -U --no-cache bash iptables openssl-dev \
     && unzip -o /artifacts.zip -d / \
     && rm /artifacts.zip \
     && rm -rf /opt \
-    && ln -s /usr/vpnserver /opt \
-    && find /usr/bin/vpn* -type f ! -name vpnserver \
+    && ln -s /usr/vpnbridge /opt \
+    && find /usr/bin/vpn* -type f ! -name vpnbridge \
        -exec sh -c 'ln -s {} /opt/$(basename {})' \;
 
-WORKDIR /usr/vpnserver/
+WORKDIR /usr/vpnbridge/
 
-VOLUME ["/usr/vpnserver/server_log/", "/usr/vpnserver/packet_log/", "/usr/vpnserver/security_log/"]
+VOLUME ["/usr/vpnbridge/server_log/", "/usr/vpnbridge/packet_log/", "/usr/vpnbridge/security_log/"]
 
-ENTRYPOINT ["/entrypoint.sh"]
+# ENTRYPOINT ["/entrypoint.sh"]
 
 EXPOSE 500/udp 4500/udp 1701/tcp 1194/udp 5555/tcp 443/tcp
 
-CMD ["/usr/bin/vpnserver", "execsvc"]
+CMD ["/usr/bin/vpnbridge", "execsvc"]
