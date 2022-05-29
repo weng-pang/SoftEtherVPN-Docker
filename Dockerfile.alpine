@@ -23,7 +23,6 @@ RUN apk add -U build-base ncurses-dev openssl-dev readline-dev zip zlib-dev \
     && ./configure \
     && make \
     && make install \
-    && touch /usr/vpnserver/vpn_server.config \
     && touch /usr/vpnbridge/vpn_bridge.config \
     && zip -r9 /artifacts.zip /usr/vpn* /usr/bin/vpn*
 
@@ -36,7 +35,6 @@ COPY copyables /
 ENV LANG=en_US.UTF-8
 
 RUN apk add -U --no-cache bash iptables openssl-dev \
-    && chmod +x /entrypoint.sh /gencert.sh \
     && unzip -o /artifacts.zip -d / \
     && rm /artifacts.zip \
     && rm -rf /opt \
@@ -46,10 +44,8 @@ RUN apk add -U --no-cache bash iptables openssl-dev \
 
 WORKDIR /usr/vpnbridge/
 
-VOLUME ["/usr/vpnbridge/server_log/", "/usr/vpnbridge/packet_log/", "/usr/vpnbridge/security_log/"]
+VOLUME ["/usr/vpnbridge/server_log/", "/usr/vpnbridge/packet_log/", "/usr/vpnbridge/security_log/","vpn_bridge.config"]
 
-# ENTRYPOINT ["/entrypoint.sh"]
-
-EXPOSE 500/udp 4500/udp 1701/tcp 1194/udp 5555/tcp 443/tcp
+EXPOSE 5555/tcp
 
 CMD ["/usr/bin/vpnbridge", "execsvc"]

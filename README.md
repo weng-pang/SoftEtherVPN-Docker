@@ -1,58 +1,39 @@
-# A simple<sup>*</sup> [SoftEther VPN][1] server Docker image
+# A [SoftEther VPN][1] Bridge Docker image (WIP)
 
-![](https://github.com/siomiz/SoftEtherVPN/workflows/Docker%20Image%20CI/badge.svg)
+![](https://github.com/weng-pang/SoftEtherVPN-Docker/workflows/Docker%20Image%20CI/badge.svg)
 
-<sup>*</sup> "Simple" as in no configuration parameter is needed for a single-user SecureNAT setup.
+
+## Credit 
+
+This image repository is derived directly from siomiz's [Softether VPN Docker ](https://github.com/siomiz/SoftEtherVPN/)
+
+It is a heavily scaled down version - the image covers the bridge function only.
+
+### Quick Background
+
+Siomiz is very kind to provide a solution for implementing the Softether server as a docker image.
+
+That makes me thinking: we now have a vpn server, how about the other components (like vpn bridge)? My use case is to containerise the vpn bridge, so I can deploy my vpn branches a lot more rapidly. It turns out the only thing I have to do is to switch the vpn server to vpn bridge on the dockerfile, without the key creation, and it is ready to go. 
+
+As of the current status, the alpine docker is created. Given time and resources, I will cover all other dockerfiles as well.
 
 ## Image Tags
-Base OS Image | Latest Stable ([v4.38-9760-rtm](https://github.com/SoftEtherVPN/SoftEtherVPN_Stable/tree/v4.38-9760-rtm)) | Previous Base | [v4.36-9754-beta](https://github.com/SoftEtherVPN/SoftEtherVPN_Stable/tree/v4.36-9754-beta)
-------------- | -- | -- | --
-`centos:8` | **`:latest`**, `:centos`, `:9760`, `:4.38`, `:9760-centos`, `:4.38-centos` | `centos:7` | `:9754`, `:4.36`, `:9754-centos`, `4.36-centos`
-`debian:10-slim` | `:debian`, `:9760-debian`, `:4.38-debian` | `debian:10-slim` | `:9754-debian`, `:4.36-debian`
-`alpine:3.14` | `:alpine`, `:9760-alpine`, `:4.38-alpine` | `alpine:3.9` | `:9754-alpine`, `:4.36-alpine`
-`ubuntu:20.04` | `:ubuntu`, `:9760-ubuntu`, `:4.38-ubuntu` | `ubuntu:18.04` | `:9754-ubuntu`, `:4.36-ubuntu`
+Base OS Image | Available | Latest Stable ([v4.38-9760-rtm](https://github.com/SoftEtherVPN/SoftEtherVPN_Stable/tree/v4.38-9760-rtm)) | Previous Base | [v4.36-9754-beta](https://github.com/SoftEtherVPN/SoftEtherVPN_Stable/tree/v4.36-9754-beta)
+------------- | -- | -- | -- | --
+`alpine:3.14` | YES | `:alpine`, `:9760-alpine`, `:4.38-alpine` | `alpine:3.9` | `:9754-alpine`, `:4.36-alpine`
+`centos:8` | NO |**`:latest`**, `:centos`, `:9760`, `:4.38`, `:9760-centos`, `:4.38-centos` | `centos:7` | `:9754`, `:4.36`, `:9754-centos`, `4.36-centos`
+`debian:10-slim` | NO|  `:debian`, `:9760-debian`, `:4.38-debian` | `debian:10-slim` | `:9754-debian`, `:4.36-debian`
+`ubuntu:20.04` | NO | `:ubuntu`, `:9760-ubuntu`, `:4.38-ubuntu` | `ubuntu:18.04` | `:9754-ubuntu`, `:4.36-ubuntu`
 
 ## Setup
- - L2TP/IPSec PSK + OpenVPN
  - SecureNAT enabled
- - Perfect Forward Secrecy (DHE-RSA-AES256-SHA)
  - make'd from [the official SoftEther VPN GitHub Stable Edition Repository][2].
+ - vpn bridge selected
 
-`docker run -d --cap-add NET_ADMIN -p 500:500/udp -p 4500:4500/udp -p 1701:1701/tcp -p 1194:1194/udp -p 5555:5555/tcp siomiz/softethervpn`
+`docker run -d --cap-add NET_ADMIN -p 5555:5555/tcp wengpang/softethervpn`
 
-Connectivity tested on Android + iOS devices. It seems Android devices do not require L2TP server to have port 1701/tcp open.
-
-The above example will accept connections from both L2TP/IPSec and OpenVPN clients at the same time.
-
-Mix and match published ports: 
-- `-p 500:500/udp -p 4500:4500/udp -p 1701:1701/tcp` for L2TP/IPSec
-- `-p 1194:1194/udp` for OpenVPN.
-- `-p 443:443/tcp` for OpenVPN over HTTPS.
+Supported published ports: 
 - `-p 5555:5555/tcp` for SoftEther VPN (recommended by vendor).
-- `-p 992:992/tcp` is also available as alternative.
-
-Any protocol supported by SoftEther VPN server is accepted at any open/published port (if VPN client allows non-default ports).
-
-## Credentials
-
-All optional:
-
-- `-e PSK`: Pre-Shared Key (PSK), if not set: "notasecret" (without quotes) by default.
-- `-e USERS`: Multiple usernames and passwords may be set with the following pattern: `username:password;user2:pass2;user3:pass3`. Username and passwords are separated by `:`. Each pair of `username:password` should be separated by `;`. If not set a single user account with a random username ("user[nnnn]") and a random weak password is created.
-- `-e SPW`: Server management password. :warning:
-- `-e HPW`: "DEFAULT" hub management password. :warning:
-
-Single-user mode (usage of `-e USERNAME` and `-e PASSWORD`) is still supported.
-
-See the docker log for username and password (unless `-e USERS` is set), which *would look like*:
-
-    # ========================
-    # user6301
-    # 2329.2890.3101.2451.9875
-    # ========================
-Dots (.) are part of the password. Password will not be logged if specified via `-e USERS`; use `docker inspect` in case you need to see it.
-
-:warning: if not set a random password will be set but not displayed nor logged. If specifying read the notice below.
 
 #### Notice ####
 
@@ -60,13 +41,13 @@ If you specify credentials using environment variables (`-e`), they may be revea
 
 ## Configurations ##
 
-To make the server configurations persistent beyond the container lifecycle (i.e. to make the config survive a restart), mount a complete config file at `/usr/vpnserver/vpn_server.config`. If this file is mounted the initial setup will be skipped.
+To make the bridge configurations persistent beyond the container lifecycle (i.e. to make the config survive a restart), mount a complete config file at `/usr/vpnbridge/vpn_bridge.config`. If this file is mounted the initial setup will be skipped.
 To obtain a config file template, `docker run` the initial setup with Server & Hub passwords, then `docker cp` out the config file:
 
     $ docker run --name vpnconf -e SPW=<serverpw> -e HPW=<hubpw> siomiz/softethervpn echo
-    $ docker cp vpnconf:/usr/vpnserver/vpn_server.config /path/to/vpn_server.config
+    $ docker cp vpnconf:/usr/vpnbridge/vpn_bridge.config /path/to/vpn_bridge.config
     $ docker rm vpnconf
-    $ docker run ... -v /path/to/vpn_server.config:/usr/vpnserver/vpn_server.config siomiz/softethervpn
+    $ docker run ... -v /path/to/vpn_bridge.config:/usr/vpnbridge/vpn_bridge.config siomiz/softethervpn
 
 Refer to [SoftEther VPN Server Administration manual](https://www.softether.org/4-docs/1-manual/3._SoftEther_VPN_Server_Manual/3.3_VPN_Server_Administration) for more information.
 
@@ -74,9 +55,9 @@ Refer to [SoftEther VPN Server Administration manual](https://www.softether.org/
 
 By default SoftEther has a very verbose logging system. For privacy or space constraints, this may not be desirable. The easiest way to solve this create a dummy volume to log to /dev/null. In your docker run you can use the following volume variables to remove logs entirely.
 ```
--v /dev/null:/usr/vpnserver/server_log \
--v /dev/null:/usr/vpnserver/packet_log \
--v /dev/null:/usr/vpnserver/security_log
+-v /dev/null:/usr/vpnbridge/server_log \
+-v /dev/null:/usr/vpnbridge/packet_log \
+-v /dev/null:/usr/vpnbridge/security_log
 ```
 ## Server & Hub Management Commands ##
 
@@ -88,28 +69,6 @@ Example: Set MTU via [`NatSet`](https://www.softether.org/4-docs/1-manual/6._Com
 `-e VPNCMD_HUB='NatSet /MTU:1500'`
 
 Note that commands run only if the config file is not mounted. Some commands (like `ServerPasswordSet`) will cause problems.
-
-## OpenVPN ##
-
-`docker run -d --cap-add NET_ADMIN -p 1194:1194/udp siomiz/softethervpn`
-
-The entire log can be saved and used as an `.ovpn` config file (change as needed).
-
-Server CA certificate will be created automatically at runtime if it's not set. You can supply _a self-signed 1024-bit RSA certificate/key pair_ created locally OR use the `gencert` script described below. Feed the keypair contents via `-e CERT` and `-e KEY` ([use of `--env-file`][3] is recommended). X.509 markers (like `-----BEGIN CERTIFICATE-----`) and any non-BASE64 character (incl. newline) can be omitted and will be ignored.
-
-Examples (assuming bash; note the double-quotes `"` and backticks `` ` ``):
-
-* ``-e CERT="`cat server.crt`" -e KEY="`cat server.key`"``
-* `-e CERT="MIIDp..b9xA=" -e KEY="MIIEv..x/A=="`
-* `--env-file /path/to/envlist`
-
-`env-file` template can be generated by:
-
-`docker run --rm siomiz/softethervpn gencert > /path/to/envlist`
-
-The output will have `CERT` and `KEY` already filled in. Modify `PSK`/`USERS`.
-
-Certificate volumes support (like `-v` or `--volumes-from`) will be added at some point...
 
 ## License ##
 
