@@ -24,9 +24,7 @@ jobs:
     - uses: actions/checkout@v1
     - name: Build Docker image
       run: docker build . --file Dockerfile.${{ matrix.tag }} --tag vpn
-    - name: Test IPsec connection
+    - name: Upload to package repository
       run: |
-        docker network create --subnet 172.18.0.0/16 test-ipsec
-        docker run -d --cap-add NET_ADMIN -e USERNAME=test -e PASSWORD=test --network test-ipsec --ip 172.18.0.3 vpn
-        sudo bash tests/prepare-ipsec.sh
-        sudo bash tests/test-ipsec.sh
+        docker login ghcr.io -u USERNAME --password-stdin
+        docker push ghcr.io/OWNER/IMAGE_NAME:latest
