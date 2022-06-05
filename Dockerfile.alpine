@@ -46,6 +46,6 @@ WORKDIR /usr/vpnbridge/
 
 VOLUME ["/usr/vpnbridge/server_log/", "/usr/vpnbridge/packet_log/", "/usr/vpnbridge/security_log/","vpn_bridge.config"]
 
-EXPOSE 5555/tcp
+EXPOSE 5555/tcp 1194/udp 992/tcp 1701/tcp
 
 CMD ["/usr/bin/vpnbridge", "execsvc"]
