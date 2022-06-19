@@ -44,6 +44,8 @@ RUN apk add -U --no-cache bash iptables openssl-dev \
 
 WORKDIR /usr/vpnbridge/
 
+ENTRYPOINT ["/entrypoint.sh"]
+
 VOLUME ["/usr/vpnbridge/server_log/", "/usr/vpnbridge/packet_log/", "/usr/vpnbridge/security_log/","vpn_bridge.config"]
 
 EXPOSE 5555/tcp 1194/udp 992/tcp 1701/tcp

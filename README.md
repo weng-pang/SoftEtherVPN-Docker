@@ -39,6 +39,14 @@ Supported published ports:
 
 If you specify credentials using environment variables (`-e`), they may be revealed via the process list on host (ex. `ps(1)` command) or `docker inspect` command. It is recommended to mount an already-configured SoftEther VPN config file at `/opt/vpn_server.config`, which contains hashed passwords rather than raw ones. The initial setup will be skipped if this file exists at runtime (in entrypoint script). You can obtain this file from a running container using [`docker cp` command](https://docs.docker.com/engine/reference/commandline/cp/).
 
+## Use of Privilege Mode ##
+
+As mentioned by the [Softether documentation](https://www.softether.org/4-docs/1-manual/3._SoftEther_VPN_Server_Manual/3.6_Local_Bridges#3.6.5_Supported_Network_Adapter_Types), the network bridge requires promiscuous mode or the bridge adapter will return an error status. 
+Noramlly, on a physical machine, we can turn on the network adaptor the promiscuous mode on. Under docker environment, some preparation must be done:
+- The docker privilege mode must be turned on
+- The mode is available by giving the `--privilege`flag.
+Of course, this is a potential security concern. I am happy to see if there are any possible alternatives, provided that the Softether's operation is very severally limited. (For example, the [official documentation](https://www.softether.org/4-docs/1-manual/3._SoftEther_VPN_Server_Manual/3.6_Local_Bridges#3.6.6_Use_of_network_adapters_not_supporting_Promiscuous_Mode) does say so, but it does not say clearly what sort of limitation it encounters)
+
 ## Configurations ##
 
 To make the bridge configurations persistent beyond the container lifecycle (i.e. to make the config survive a restart), mount a complete config file at `/usr/vpnbridge/vpn_bridge.config`. If this file is mounted the initial setup will be skipped.
